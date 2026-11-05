@@ -15,11 +15,13 @@ The separate native VST3 source at https://github.com/prj-beatrice/beatrice-vst 
 
 No third-party VB-CABLE dependency is assumed. The user's existing Wave Link 3 virtual audio devices and routing should be used wherever they can carry the Beatrice signal.
 
-Target signal order:
+Confirmed existing signal order:
 
-FIFINE K688 -> Beatrice AI conversion -> Wave Link 3 input/routing -> existing Wave Link plugin chain (FabFilter, LoudMax, etc.) -> existing Wave Link MicrophoneFX/output
+FIFINE K688 (XLR) -> MaonoCaster G1 Neo -> Wave Link 3 microphone input/channel -> the user's existing downstream Mixes/output processing and routing.
 
-The exact handoff from Beatrice back into Wave Link must be verified against the devices exposed by the installed Wave Link 3 version. Do not create a loop by feeding a Wave Link output back into an input that is mixed into the same output. Do not install VB-CABLE unless testing proves Wave Link cannot accept Beatrice's output through its existing devices.
+The screenshot confirms the FabFilter/TDR/LoudMax effects are attached in the Wave Link 3 Mixes area over the added microphone source. Do not move these effects or assume they run before Wave Link. Beatrice is treated as its own virtual audio device/endpoint, as identified by the user. Its exact insertion/routing point relative to Wave Link must be established from the actual Windows endpoint names and Wave Link routing UI before prescribing a new signal path. Do not redraw the user's confirmed K688 -> G1 Neo -> Wave Link order.
+
+The Beatrice virtual endpoint and Wave Link's virtual endpoints must be distinguished by their exact Windows device names. Do not call Beatrice's endpoint a Wave Link virtual cable, and do not assume VB-CABLE is required. Avoid feedback by never routing a Wave Link mix back into an input included in that same mix.
 
 Beatrice performs conversion; Wave Link remains the user's main mixer and plugin host. This is audio-device/application routing, not a claim that the standalone app is a native Wave Link VST insert.
 
