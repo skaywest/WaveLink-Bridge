@@ -1,64 +1,42 @@
 # Architecture
 
-## Goal
+## Correct integration target
 
-Use the existing official Beatrice 2 VST3 in Wave Link 3 and add a separate, lightweight control layer for preset switching, especially through FIFINE D6. Do not rebuild the Beatrice audio engine.
+The 112-voice product is the Beatrice for Windows standalone application, not the separate prj-beatrice/beatrice-vst source repository by itself.
 
-## 1. Existing Beatrice VST3
+Upstream application: https://github.com/Project-Beatrice-V2/Beatrice-voicechanger-windows
 
-Upstream: https://github.com/prj-beatrice/beatrice-vst
+The Windows application bundles the Beatrice 2.0 engine and three voice sets:
+- JVS Corpus: 100 speakers
+- Official Model: 4 speakers
+- Classic Old TTS: 8 speakers
 
-The upstream repository contains a native C++20 VST3 plugin with an audio processor, controller, parameter schema, editor, and its own inference integration. The official plugin is the audio-processing component. This project should first test that exact plugin in Wave Link 3 before designing any replacement.
+It owns microphone capture and conversion. Its local backend listens on 127.0.0.1:5005 and exposes /status, /devices, /set_config, and /set_model. /status reports current_model, speaker_index, and n_speakers. /set_config?speaker_index=N selects a voice in the loaded set; /set_model?model=jvs|official_1|old_tts changes the set asynchronously.
 
-The upstream processor accepts mono/stereo buses and processes float32 audio. Its source reports latency through the VST3 processor interface when its latency-reporting parameter is enabled. Actual behavior, latency, and stability must be measured in Wave Link 3.
+## Audio path into Wave Link 3
 
-## 2. Wave Link compatibility validation
+Initial supported topology to validate on the user's PC:
 
-Verify on the target Windows 11 system:
-- the official Beatrice VST3 package is installed in a location Wave Link 3 scans;
-- Wave Link detects it and loads its editor;
-- microphone input reaches the plugin and converted audio reaches the intended Wave Link output;
-- sample rate, channel layout, block size, latency reporting, and CPU use are acceptable;
-- presets and parameter state survive reload/restart as expected.
+FIFINE K688 -> Beatrice input -> Beatrice conversion -> VB-CABLE Input -> VB-CABLE Output -> Wave Link input channel -> Wave Link mix/output
 
-Do not assume that any VST3 plugin will necessarily work correctly in every host.
+- Beatrice output is routed to CABLE Input.
+- Wave Link receives CABLE Output as an input device/channel.
+- Do not capture the physical FIFINE K688 twice in Wave Link unless the user intentionally wants both raw and converted signals.
+- Disable Beatrice Hear Yourself initially; monitor from Wave Link/headphones to avoid duplicate monitoring.
+- This is device routing, not a native Wave Link VST insert. Test latency, sample rate, channels, and feedback.
 
-## 3. Control bridge
+Do not load a second Beatrice inference engine in Wave Link while the standalone app is already converting the microphone.
 
-The bridge is outside the audio signal path. Its responsibilities:
-- map a small set of user actions to supported Beatrice preset/parameter controls;
-- provide stable preset names/IDs and user-configurable D6 mappings;
-- show whether Beatrice and the control path are available;
-- validate configuration and reject unknown actions safely.
+## Control bridge
 
-Preferred control order:
-1. built-in Beatrice preset/state functionality, if it supports the required operation;
-2. documented keyboard shortcuts or host/plugin automation exposed by Wave Link;
-3. a documented local control API, if upstream provides one;
-4. only then consider another integration method, after compatibility and security review.
+src/BeatriceBridge is a Windows helper outside the audio path. It registers configurable global keyboard shortcuts, talks only to http://127.0.0.1:5005, reads /status before changing a voice, waits for asynchronous model loading, validates voice indices against the active model, toggles LIVE/BYPASS, and serializes requests.
 
-Do not use undocumented memory writes, DLL injection, process patching, or fragile UI-coordinate automation as the default design.
+FIFINE D6 can be mapped to the configured key combinations only if its installed software supports sending those combinations. Confirm this on the user's D6 setup; do not assume a direct device SDK.
 
-## 4. FIFINE D6
+## Security
 
-First verify what the installed D6 software can emit (keyboard shortcuts, media keys, hotkeys, or application actions). Map each physical button to a stable bridge action using the supported mechanism. Do not assume a direct D6 device protocol or undocumented SDK.
+The upstream API is unauthenticated HTTP but binds to loopback. The helper must never expose it on the LAN or accept arbitrary URLs, shell commands, or file paths. Only documented model names and in-range voice indices are allowed. The helper does not record audio or inject into Beatrice/Wave Link processes.
 
-Rapid presses must be debounced or safely serialized. Missing presets and unavailable Beatrice instances must produce a visible error rather than silently switching to an unintended preset.
+## Separate VST3 project
 
-## 5. Security and reliability
-
-- Keep control local to the current Windows user/session.
-- Validate message size, schema, parameter ranges, and preset IDs.
-- Do not accept arbitrary shell commands or arbitrary file paths.
-- Do not log microphone audio or voice samples.
-- Never interfere with the Beatrice audio-processing thread.
-- Provide clear status and recover gracefully if the bridge exits.
-
-## Decisions still open
-
-- Whether Beatrice exposes a usable preset-selection shortcut/API.
-- Whether Wave Link 3 exposes plugin parameter automation usable by the bridge.
-- Exact FIFINE D6 hotkey capabilities on the user's installed software version.
-- Whether a small background helper is sufficient or a VST3 wrapper is genuinely required.
-
-These questions should be answered by inspecting the existing plugin and testing it in Wave Link before adding unnecessary audio infrastructure.
+prj-beatrice/beatrice-vst is a separate native VST3 codebase. It is not proof that the standalone app's 112 voices are available as a Wave Link insert. Native VST3 integration is out of scope unless host testing demonstrates a need and licensing is confirmed.
