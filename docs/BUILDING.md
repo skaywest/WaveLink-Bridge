@@ -40,11 +40,16 @@ In the D6 software, assign each physical button a keyboard shortcut matching bri
 
 ## Audio routing checklist
 
-1. In Beatrice, choose FIFINE K688 as input.
-2. Choose CABLE Input (VB-Audio Virtual Cable) as Beatrice output.
-3. In Wave Link 3, add CABLE Output as an input channel.
-4. Do not add raw FIFINE K688 to the same outgoing mix unless intentionally desired.
-5. Keep Beatrice Hear Yourself off initially; monitor from Wave Link.
+1. Preserve the user's current Wave Link 3 device and plugin configuration.
+2. Choose FIFINE K688 as Beatrice's input.
+3. Inspect Beatrice's available output devices and Wave Link 3's actual virtual endpoints.
+4. Route Beatrice output into a Wave Link input path that is not fed back into Beatrice or into itself.
+5. Keep the existing FabFilter/LoudMax chain downstream of the converted voice.
+6. Avoid mixing the raw K688 a second time unless the user explicitly wants a dry signal.
+7. Keep Beatrice Hear Yourself off initially; monitor through the existing Wave Link output.
+
+Do not install VB-CABLE unless the native Wave Link endpoints cannot receive Beatrice's output cleanly. The exact routing must be verified on the target PC before documenting a fixed device selection.
+
 
 ## Limitations
 
