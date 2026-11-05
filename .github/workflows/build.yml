@@ -37,8 +37,8 @@ jobs:
         shell: pwsh
         run: |
           $publish = "src/BeatriceBridge/bin/Release/net8.0-windows/win-x64/publish"
-          & "$publish/BeatriceBridge.exe"
-          if ($LASTEXITCODE -ne 3) { throw "Expected exit code 3 when Beatrice API is unavailable; got $LASTEXITCODE" }
+          $process = Start-Process -FilePath "$publish/BeatriceBridge.exe" -Wait -PassThru -NoNewWindow
+          if ($process.ExitCode -ne 3) { throw "Expected exit code 3 when Beatrice API is unavailable; got $($process.ExitCode)" }
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
