@@ -67,6 +67,7 @@ jobs:
             if ($validProcess.ExitCode -ne 3) {
               throw "Valid configuration was not accepted; expected exit code 3 (API unavailable), got $($validProcess.ExitCode)"
             }
+          }
           finally {
             Remove-Item $configPath -Force -ErrorAction SilentlyContinue
           }
