@@ -1,0 +1,59 @@
+# Upstream Beatrice audit
+
+**Audit date:** 2026-11-05  
+**Purpose:** determine whether upstream Beatrice can be integrated and redistributed in this project. This is a source and metadata review, not a binary malware analysis or a legal opinion.
+
+## Sources inspected
+
+- Official engine/VST source: https://github.com/prj-beatrice/beatrice-vst
+- Windows application wrapper: https://github.com/Project-Beatrice-V2/Beatrice-voicechanger-windows
+- Windows wrapper README and its `LICENSE`, `contributors.txt`, `beatrice_loader.py`, and `beatrice_audio.py`
+- Model repository: https://github.com/Project-Beatrice-V2/beatrice-voice-models
+
+## Findings
+
+### 1. The public source license does not grant rights to the complete engine
+
+The `prj-beatrice/beatrice-vst` repository has an MIT `LICENSE.txt` for the source files, but its `LICENSES_BUNDLED.txt` explicitly states that the Beatrice VST program includes a **non-public inference library** and that use beyond the scope permitted by applicable law requires individual permission from Project Beatrice.
+
+**Consequence:** do not assume that an MIT license on the visible VST source permits copying, linking, modifying, or redistributing the complete inference engine. Before shipping or bundling the engine, obtain and archive explicit written permission or authoritative license terms covering the intended use. A local personal prototype must still comply with the applicable upstream terms.
+
+### 2. Windows wrapper is a separate application, not a ready-made Wave Link bridge
+
+The Windows project is an Electron application with a Python audio backend. Its README describes a local REST interface on `127.0.0.1:5005`, and the backend opens its own PortAudio input/output streams at 16 kHz with 160-sample blocks.
+
+**Consequence:** this backend cannot simply be inserted into Wave Link's VST3 signal path. Running a second independent microphone stream can cause device contention, routing complexity, and extra buffering. Reusing the UI or audio loop is not the same as implementing a host-loaded VST3 effect.
+
+### 3. Native Beatrice API is visible only as an implementation detail in the wrapper
+
+`beatrice_loader.py` loads a DLL from the bundled VST3 directory with `ctypes.CDLL` and declares functions such as `Beatrice20rc0_CreatePhoneExtractor`, `Beatrice20rc0_CreatePitchEstimator`, `Beatrice20rc0_CreateWaveformGenerator`, and corresponding context/resource functions.
+
+The inspected loader demonstrates component construction and parameter-file loading. It does not, by itself, document a stable public SDK contract for streaming inference, thread safety, ABI compatibility, or redistribution.
+
+**Consequence:** treat these symbols as an undocumented/private integration surface until the upstream maintainers confirm the supported API and its terms. Do not build the new plugin against guessed function signatures.
+
+### 4. Model/data licensing is separate from application code
+
+The Windows wrapper's contributor notice identifies JVS corpus content as non-commercial use only. The model repository also states that each model can carry its own terms, independent of the repository's MIT license.
+
+**Consequence:** do not bundle JVS or community model weights by default. Every model must have its own provenance and license record, including voice/likeness permissions where applicable.
+
+### 5. The Python audio backend is not suitable for a VST3 real-time callback
+
+The backend uses Python, NumPy, PortAudio, queues, and a separate monitor stream. That may be workable as a standalone application, but it is not evidence that inference can safely run inside a host's real-time audio callback.
+
+**Consequence:** keep inference out of the VST3 callback. First prove a bounded streaming interface and measure processing time, buffering, and latency in an isolated prototype.
+
+## Decision
+
+Proceed with a clean-room host/bridge design and upstream API investigation. Do not copy upstream binaries, model weights, or proprietary inference components into this repository.
+
+The first technical milestone is not a full plugin: it is a reproducible proof that an authorized Beatrice runtime can accept streaming audio, produce streaming output, and meet a measured latency budget on the target Windows machine.
+
+## Open questions for upstream maintainers
+
+1. What exact license governs the proprietary inference library and the bundled Beatrice engine binaries?
+2. Is there a supported public SDK/API for streaming inference outside the official VST host?
+3. Are the exported `Beatrice20rc0_*` symbols stable and documented, and what ABI/calling convention/threading guarantees apply?
+4. May a third-party VST3 wrapper load the engine, and may it be distributed for personal/non-commercial use?
+5. Which model packages can be used and redistributed, and under what voice/data terms?
