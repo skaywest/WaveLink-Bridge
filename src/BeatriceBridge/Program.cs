@@ -131,8 +131,18 @@ internal static class Program
             if (action.ToggleBypass)
             {
                 var s = await GetStatusAsync(cancellationToken);
-                await GetJsonAsync($"set_config?bypass={(s.Bypass ? "false" : "true")}", cancellationToken);
-                Console.WriteLine(s.Bypass ? "LIVE enabled." : "BYPASS enabled.");
+                bool requestedBypass = !s.Bypass;
+                await GetJsonAsync($"set_config?bypass={(requestedBypass ? "true" : "false")}", cancellationToken);
+                var deadline = DateTime.UtcNow.AddSeconds(2);
+                do
+                {
+                    s = await GetStatusAsync(cancellationToken);
+                    if (s.Bypass == requestedBypass) break;
+                    await Task.Delay(50, cancellationToken);
+                } while (DateTime.UtcNow < deadline);
+                if (s.Bypass != requestedBypass)
+                    throw new TimeoutException("Beatrice did not report the requested LIVE/BYPASS state.");
+                Console.WriteLine(requestedBypass ? "BYPASS enabled." : "LIVE enabled.");
                 return;
             }
 
@@ -194,7 +204,15 @@ internal static class Program
         using var response = await Http.GetAsync(path, cancellationToken);
         response.EnsureSuccessStatusCode();
         var body = await response.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>(JsonOptions, cancellationToken);
-        if (body is not null && body.TryGetValue("error", out var error)) throw new InvalidOperationException(error.ToString());
+        if (body is null) throw new InvalidDataException("Empty Beatrice API response.");
+        if (body.TryGetValue("error", out var error)) throw new InvalidOperationException(error.ToString());
+        if (body.TryGetValue("status", out var status) && string.Equals(status.ToString(), "error", StringComparison.OrdinalIgnoreCase))
+        {
+            var message = body.TryGetValue("message", out var detail) ? detail.ToString()
+                : body.TryGetValue("error_message", out var errorMessage) ? errorMessage.ToString()
+                : "Beatrice API reported an error.";
+            throw new InvalidOperationException(message);
+        }
     }
 
     private static void ValidateConfig(BridgeConfig config)
