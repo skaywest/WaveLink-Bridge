@@ -16,7 +16,7 @@ The executable is written under:
 
 src/BeatriceBridge/bin/Release/net8.0-windows/win-x64/publish/BeatriceBridge.exe
 
-Copy bridge.example.json beside the executable as bridge.json and edit the mappings. Start Beatrice first; the helper connects to its local API at 127.0.0.1:5005.
+The publish folder contains bridge.example.json. The helper can start with this example automatically, so renaming is not required for a first launch. To customize mappings, copy it beside the executable as bridge.json and edit that file; bridge.json takes priority. Start Beatrice first; the helper connects to its local API at 127.0.0.1:5005.
 
 ## Hotkey format
 
