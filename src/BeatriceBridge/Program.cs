@@ -7,7 +7,7 @@ namespace BeatriceBridge;
 
 internal static class Program
 {
-    private const uint WmHotkey = 0x0312;
+    private const uint WmHotkey = 0x0312, WmQuit = 0x0012;
     private const uint ModAlt = 0x0001, ModControl = 0x0002, ModShift = 0x0004, ModNoRepeat = 0x4000;
     private static readonly HttpClient Http = new() { BaseAddress = new Uri("http://127.0.0.1:5005/"), Timeout = TimeSpan.FromSeconds(3) };
     private static readonly SemaphoreSlim ApiLock = new(1, 1);
@@ -54,6 +54,8 @@ internal static class Program
         }
 
         Console.WriteLine("Bridge active. Ctrl+C to exit.");
+        uint mainThreadId = GetCurrentThreadId();
+        Console.CancelKeyPress += (_, e) => { e.Cancel = true; PostThreadMessage(mainThreadId, WmQuit, IntPtr.Zero, IntPtr.Zero); };
         try
         {
             while (GetMessage(out var message, IntPtr.Zero, 0, 0) > 0)
@@ -182,6 +184,8 @@ internal static class Program
     [DllImport("user32.dll", SetLastError = true)] private static extern bool RegisterHotKey(IntPtr hWnd, uint id, uint fsModifiers, uint vk);
     [DllImport("user32.dll", SetLastError = true)] private static extern bool UnregisterHotKey(IntPtr hWnd, uint id);
     [DllImport("user32.dll", SetLastError = true)] private static extern int GetMessage(out NativeMessage lpMsg, IntPtr hWnd, uint min, uint max);
+    [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
+    [DllImport("user32.dll", SetLastError = true)] private static extern bool PostThreadMessage(uint threadId, uint message, IntPtr wParam, IntPtr lParam);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct NativeMessage { public IntPtr hWnd; public uint message; public IntPtr wParam; public IntPtr lParam; public uint time; public System.Drawing.Point point; }
