@@ -13,6 +13,13 @@ internal static class Program
     private static readonly SemaphoreSlim ApiLock = new(1, 1);
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
     private static readonly List<uint> RegisteredIds = new();
+    private static readonly List<HotkeyAction> RegisteredActions = new();
+    private static readonly Dictionary<string, int> ExpectedSpeakerCounts = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["jvs"] = 100,
+        ["official_1"] = 4,
+        ["old_tts"] = 8
+    };
 
     [STAThread]
     private static async Task<int> Main()
@@ -60,6 +67,7 @@ internal static class Program
                 UnregisterAll(); return 4;
             }
             RegisteredIds.Add(id++);
+            RegisteredActions.Add(item.Value);
             Console.WriteLine($"{item.Key} -> {Describe(item.Value)}");
         }
 
@@ -72,8 +80,8 @@ internal static class Program
             {
                 if (message.message != WmHotkey) continue;
                 int index = checked((int)message.wParam.ToInt64() - 1);
-                if (index >= 0 && index < config.Hotkeys.Count)
-                    _ = ExecuteActionAsync(config.Hotkeys.ElementAt(index).Value);
+                if (index >= 0 && index < RegisteredActions.Count)
+                    _ = ExecuteActionAsync(RegisteredActions[index]);
             }
         }
         finally { UnregisterAll(); }
@@ -105,9 +113,13 @@ internal static class Program
                     {
                         await Task.Delay(250);
                         s = await GetStatusAsync();
-                    } while (!string.Equals(s.CurrentModel, action.Model, StringComparison.OrdinalIgnoreCase) && DateTime.UtcNow < deadline);
+                    } while ((!string.Equals(s.CurrentModel, action.Model, StringComparison.OrdinalIgnoreCase)
+                              || (ExpectedSpeakerCounts.TryGetValue(action.Model, out var expected) && s.SpeakerCount != expected))
+                             && DateTime.UtcNow < deadline);
                     if (!string.Equals(s.CurrentModel, action.Model, StringComparison.OrdinalIgnoreCase))
                         throw new TimeoutException($"Model '{action.Model}' did not finish loading.");
+                    if (ExpectedSpeakerCounts.TryGetValue(action.Model, out var expectedCount) && s.SpeakerCount != expectedCount)
+                        throw new TimeoutException($"Model '{action.Model}' reported {s.SpeakerCount} voices; expected {expectedCount}.");
                 }
             }
 
@@ -200,6 +212,7 @@ internal static class Program
     {
         foreach (var id in RegisteredIds) UnregisterHotKey(IntPtr.Zero, id);
         RegisteredIds.Clear();
+        RegisteredActions.Clear();
     }
 
     [DllImport("user32.dll", SetLastError = true)] private static extern bool RegisterHotKey(IntPtr hWnd, uint id, uint fsModifiers, uint vk);
