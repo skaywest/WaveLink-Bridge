@@ -106,3 +106,8 @@ The revised first milestone is:
 4. implement only the missing control glue.
 
 This revised scope replaces the earlier proposal to build a new VST3 host plugin plus isolated Beatrice inference worker.
+
+
+## Corrected integration decision — 2026-11-05
+
+The 112-voice target is the Project-Beatrice-V2 Windows standalone application, not the separate prj-beatrice/beatrice-vst source tree by itself. The Windows app documents a local API on 127.0.0.1:5005 with /status, /set_config (including speaker_index), and /set_model (jvs, official_1, old_tts). The app owns microphone capture and conversion; the practical Wave Link integration to validate is Beatrice output to VB-CABLE, then VB-CABLE Output as a Wave Link input. A small helper can map Windows global hotkeys to the documented API. This does not create a native Wave Link VST insert. D6 shortcut emission and actual audio routing still require testing on the target PC.
