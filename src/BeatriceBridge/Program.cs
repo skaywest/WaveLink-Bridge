@@ -18,7 +18,17 @@ internal static class Program
     private static async Task<int> Main()
     {
         var configPath = Path.Combine(AppContext.BaseDirectory, "bridge.json");
-        if (!File.Exists(configPath)) { Console.Error.WriteLine($"Missing config: {configPath}"); return 2; }
+        if (!File.Exists(configPath))
+        {
+            var examplePath = Path.Combine(AppContext.BaseDirectory, "bridge.example.json");
+            if (!File.Exists(examplePath))
+            {
+                Console.Error.WriteLine($"Missing configuration. Expected bridge.json or bridge.example.json in {AppContext.BaseDirectory}");
+                return 2;
+            }
+            configPath = examplePath;
+            Console.WriteLine("Using bridge.example.json. Copy it to bridge.json to customize hotkeys.");
+        }
         BridgeConfig config;
         try
         {
