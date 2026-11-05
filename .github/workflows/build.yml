@@ -1,0 +1,26 @@
+name: Build Beatrice Bridge
+on:
+  push:
+    paths:
+      - "src/BeatriceBridge/**"
+      - ".github/workflows/build.yml"
+  pull_request:
+    paths:
+      - "src/BeatriceBridge/**"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Validate example configuration
+        shell: pwsh
+        run: |
+          $config = Get-Content src/BeatriceBridge/bridge.example.json -Raw | ConvertFrom-Json
+          if ($config.hotkeys.Count -lt 1) { throw "No hotkeys configured" }
+      - name: Publish win-x64
+        run: dotnet publish .\src\BeatriceBridge\BeatriceBridge.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
