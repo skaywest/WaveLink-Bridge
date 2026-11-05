@@ -57,3 +57,26 @@ The first technical milestone is not a full plugin: it is a reproducible proof t
 3. Are the exported `Beatrice20rc0_*` symbols stable and documented, and what ABI/calling convention/threading guarantees apply?
 4. May a third-party VST3 wrapper load the engine, and may it be distributed for personal/non-commercial use?
 5. Which model packages can be used and redistributed, and under what voice/data terms?
+
+
+## Additional verification — official Beatrice 2 documentation and build recipe
+
+The official Beatrice website's Beatrice 2 FAQ states that the model architecture is published and that third parties may create software that converts voices using Beatrice 2 models. It separately says that use of the **official inference library** requires contacting Project Beatrice. This distinction matters: an independently implemented inference engine may be possible in principle, but the public model architecture is not the same thing as a redistributable official runtime.
+
+The official `prj-beatrice/beatrice-vst` build files were also inspected:
+
+- The plugin is C++20 and uses Steinberg's VST3 SDK as a submodule.
+- Its CMake target links an imported static `beatricelib` (`beatrice.lib` on Windows).
+- The Makefile downloads that Windows library from the Beatrice Hugging Face release location; it is not built from the visible source tree.
+- The release packaging target can also download and bundle the JVS model package.
+- The bundled-license notice explicitly restricts use of the non-public inference library absent individual permission.
+
+**Updated consequence:** the official VST source is useful for understanding the host-side structure and build setup, but copying its DSP implementation or linking its `beatrice.lib` is not an acceptable default for this project. We must either (a) obtain explicit written permission and supported integration terms from Project Beatrice, or (b) implement/use a separately licensed inference backend compatible with the published model format. The second path is a materially larger engineering task and requires its own correctness and performance validation.
+
+Official documentation reviewed:
+- https://prj-beatrice.com/ — Beatrice 2 FAQ and release information
+- https://github.com/prj-beatrice/beatrice-vst/blob/main/CMakeLists.txt
+- https://github.com/prj-beatrice/beatrice-vst/blob/main/Makefile
+- https://github.com/prj-beatrice/beatrice-vst/blob/main/LICENSES_BUNDLED.txt
+
+This remains a source/build-recipe inspection only. No upstream binary, downloaded library, model, or installer was executed or malware-scanned.
