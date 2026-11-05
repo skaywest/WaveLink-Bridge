@@ -172,11 +172,17 @@ internal static class Program
     private static void ValidateConfig(BridgeConfig config)
     {
         if (config.Hotkeys.Count == 0 || config.Hotkeys.Count > 50) throw new InvalidDataException("Configure between 1 and 50 hotkeys.");
+        var registeredCombinations = new HashSet<(uint Modifiers, uint Key)>();
         foreach (var (key, action) in config.Hotkeys)
         {
-            _ = ParseHotkey(key);
+            if (action is null) throw new InvalidDataException($"'{key}' has an empty action.");
+            var combination = ParseHotkey(key);
+            if (!registeredCombinations.Add(combination))
+                throw new InvalidDataException($"'{key}' duplicates another hotkey combination (modifier order does not matter).");
             if (action.ToggleBypass == (action.SpeakerIndex is not null))
                 throw new InvalidDataException($"'{key}' must define either toggleBypass or speakerIndex.");
+            if (action.ToggleBypass && action.Model is not null)
+                throw new InvalidDataException($"'{key}' cannot specify a model for a bypass toggle.");
             if (action.SpeakerIndex is < 0) throw new InvalidDataException($"'{key}' has a negative speakerIndex.");
             if (action.Model is not null && action.Model is not ("jvs" or "official_1" or "old_tts"))
                 throw new InvalidDataException($"'{key}' has unsupported model '{action.Model}'.");
@@ -194,9 +200,15 @@ internal static class Program
         {
             switch (part.ToLowerInvariant())
             {
-                case "ctrl": case "control": modifiers |= ModControl; break;
-                case "alt": modifiers |= ModAlt; break;
-                case "shift": modifiers |= ModShift; break;
+                case "ctrl": case "control":
+                    if ((modifiers & ModControl) != 0) throw new InvalidDataException($"'{value}' repeats Ctrl.");
+                    modifiers |= ModControl; break;
+                case "alt":
+                    if ((modifiers & ModAlt) != 0) throw new InvalidDataException($"'{value}' repeats Alt.");
+                    modifiers |= ModAlt; break;
+                case "shift":
+                    if ((modifiers & ModShift) != 0) throw new InvalidDataException($"'{value}' repeats Shift.");
+                    modifiers |= ModShift; break;
                 default:
                     if (key != 0) throw new InvalidDataException($"'{value}' contains multiple keys.");
                     key = part.ToUpperInvariant() switch
@@ -215,6 +227,7 @@ internal static class Program
             }
         }
         if (key == 0) throw new InvalidDataException($"'{value}' has no key.");
+        if (modifiers == 0) throw new InvalidDataException($"'{value}' must include Ctrl, Alt, or Shift.");
         return (modifiers, key);
     }
 
