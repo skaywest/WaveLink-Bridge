@@ -41,12 +41,12 @@ In the D6 software, assign each physical button a keyboard shortcut matching bri
 ## Audio routing checklist
 
 1. Preserve the user's current Wave Link 3 device and plugin configuration.
-2. Choose FIFINE K688 as Beatrice's input.
-3. Inspect Beatrice's available output devices and Wave Link 3's actual virtual endpoints.
-4. Route Beatrice output into a Wave Link input path that is not fed back into Beatrice or into itself.
-5. Keep the existing FabFilter/LoudMax chain downstream of the converted voice.
-6. Avoid mixing the raw K688 a second time unless the user explicitly wants a dry signal.
-7. Keep Beatrice Hear Yourself off initially; monitor through the existing Wave Link output.
+2. Preserve the confirmed physical chain: FIFINE K688 (XLR) -> MaonoCaster G1 Neo -> Wave Link 3.
+3. Inspect Beatrice's own virtual audio endpoint and record its exact Windows device name and direction. Do not label it as a Wave Link virtual device.
+4. Inspect Wave Link 3's actual channel and Mixes assignments before choosing any handoff. The user has confirmed the FabFilter/TDR/LoudMax effects are attached in the Mixes area over the added microphone source; preserve their current placement and settings.
+5. Determine a supported route that uses Beatrice's virtual endpoint without feeding a Wave Link mix back into itself or duplicating the raw mic.
+6. Keep Beatrice monitoring off initially; monitor from the established Wave Link output.
+7. Do not change the user's existing routing until the endpoint path has been verified on the target PC.
 
 Do not install VB-CABLE unless the native Wave Link endpoints cannot receive Beatrice's output cleanly. The exact routing must be verified on the target PC before documenting a fixed device selection.
 
