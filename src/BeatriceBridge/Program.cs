@@ -195,7 +195,36 @@ internal static class Program
     {
         using var response = await Http.GetAsync("status", cancellationToken);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<BackendStatus>(JsonOptions, cancellationToken)
+
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(json))
+            throw new InvalidDataException("Empty Beatrice status response.");
+
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (root.ValueKind != JsonValueKind.Object)
+            throw new InvalidDataException("Beatrice status response must be a JSON object.");
+
+        // System.Text.Json otherwise silently leaves missing value-type properties at
+        // their defaults (for example, a missing bypass field becomes false).
+        if (!root.TryGetProperty("bypass", out var bypass) ||
+            (bypass.ValueKind != JsonValueKind.True && bypass.ValueKind != JsonValueKind.False))
+            throw new InvalidDataException("Beatrice status is missing a valid 'bypass' boolean.");
+        if (!root.TryGetProperty("current_model", out var model) ||
+            model.ValueKind != JsonValueKind.String ||
+            string.IsNullOrWhiteSpace(model.GetString()))
+            throw new InvalidDataException("Beatrice status is missing a valid 'current_model' string.");
+        if (!root.TryGetProperty("n_speakers", out var speakers) ||
+            !speakers.TryGetInt32(out var speakerCount) || speakerCount < 0)
+            throw new InvalidDataException("Beatrice status is missing a valid non-negative 'n_speakers' integer.");
+        if (!root.TryGetProperty("speaker_index", out var speaker) ||
+            !speaker.TryGetInt32(out var speakerIndex) || speakerIndex < -1)
+            throw new InvalidDataException("Beatrice status is missing a valid 'speaker_index' integer.");
+
+        if (speakerCount > 0 && speakerIndex >= speakerCount)
+            throw new InvalidDataException($"Beatrice status reports speaker_index {speakerIndex} outside the {speakerCount}-voice model.");
+
+        return JsonSerializer.Deserialize<BackendStatus>(json, JsonOptions)
                ?? throw new InvalidDataException("Empty Beatrice status response.");
     }
 
