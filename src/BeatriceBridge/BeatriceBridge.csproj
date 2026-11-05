@@ -9,5 +9,5 @@
   </PropertyGroup>
   <ItemGroup>
     <None Update="bridge.example.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-  </PropertyGroup>
+  </ItemGroup>
 </Project>
