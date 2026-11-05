@@ -7,4 +7,7 @@
     <AssemblyName>BeatriceBridge</AssemblyName>
     <RootNamespace>BeatriceBridge</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <None Update="bridge.example.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </PropertyGroup>
 </Project>
