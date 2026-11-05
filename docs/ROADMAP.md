@@ -1,49 +1,46 @@
 # Roadmap
 
-## Stage 0 — Repository and upstream audit
+## Stage 0 — Existing plugin verification
 
-- [x] Create a separate repository for this project.
-- [x] Record project goals and safety constraints.
-- [ ] Inspect the exact upstream Beatrice source, API, license, model requirements, and runtime dependencies.
-- [ ] Identify a supported VST3 SDK/toolchain combination.
-- [ ] Confirm Wave Link 3 host behavior and plugin discovery requirements.
+- [x] Identify the official Beatrice 2 VST3 repository.
+- [x] Confirm that upstream contains a native VST3 processor, controller, parameter schema, and editor.
+- [x] Review the bundled inference-library and model licensing notices.
+- [ ] Obtain/install the official Beatrice VST3 package from its authorized source.
+- [ ] Verify discovery, loading, and audio processing in Wave Link 3.
+- [ ] Record plugin version, host behavior, sample rate, channel layout, latency, and CPU use.
 
-**Exit criteria:** an evidence-based integration design, with no unverified binary or license assumptions.
+**Exit criteria:** the official plugin is confirmed working (or concrete incompatibilities are documented) in the user's Wave Link 3 setup.
 
-## Stage 1 — Audio and inference feasibility
+## Stage 1 — Preset control feasibility
 
-- [ ] Build a minimal VST3 test effect and verify it loads in Wave Link 3.
-- [ ] Prototype Beatrice inference in a separate worker.
-- [ ] Measure cold-start time, steady-state processing time, buffering needs, and end-to-end latency.
-- [ ] Verify behavior at supported sample rates and variable block sizes.
-- [ ] Define fallback behavior for worker startup, overload, and crash.
+- [ ] Inspect the plugin's existing preset/state behavior and exposed parameters.
+- [ ] Determine whether preset selection can be triggered through supported shortcuts or Wave Link parameter automation.
+- [ ] Verify FIFINE D6 button output capabilities and mapping options.
+- [ ] Choose the least invasive reliable control path.
 
-**Exit criteria:** repeatable real-time-safe audio prototype with measured latency.
+**Exit criteria:** one physical D6 button can reliably trigger one intended Beatrice action without disrupting audio.
 
-## Stage 2 — Stable bridge
+## Stage 2 — Build the control bridge
 
-- [ ] Implement bounded audio transport.
-- [ ] Implement versioned, access-controlled local control IPC.
-- [ ] Add parameter validation, worker lifecycle handling, and diagnostics.
-- [ ] Add automated protocol and stress tests.
+- [ ] Implement a small Windows helper only for functionality not already provided by Beatrice/Wave Link/D6 software.
+- [ ] Add stable preset IDs and validated user configuration.
+- [ ] Add status reporting and useful error messages.
+- [ ] Add safe handling for rapid repeated presses, missing presets, and unavailable plugin/host.
 
-**Exit criteria:** no host blocking or crash under worker failure and malformed control messages.
+**Exit criteria:** preset switching is repeatable and does not interfere with the audio signal path.
 
-## Stage 3 — Presets and FIFINE D6
+## Stage 3 — Tests and packaging
 
-- [ ] Implement versioned preset storage.
-- [ ] Define stable preset IDs and safe switching semantics.
-- [ ] Verify a practical D6 trigger path on the target Windows setup.
-- [ ] Test rapid repeated presses and missing/invalid preset states.
+- [ ] Automated tests for configuration parsing, action mapping, debounce, and error handling.
+- [ ] Verify startup/shutdown and recovery behavior.
+- [ ] Test a long session in Wave Link 3 with repeated preset changes.
+- [ ] Reproducible Windows x64 build and installation instructions.
+- [ ] Dependency/license inventory and security review of distributable artifacts.
 
-**Exit criteria:** reliable preset switching without audio-thread blocking.
+**Exit criteria:** a tested companion utility with documented compatibility and rollback instructions.
 
-## Stage 4 — Packaging and release validation
+## Explicitly out of scope unless testing proves it necessary
 
-- [ ] Reproducible Windows x64 build.
-- [ ] Dependency and license inventory.
-- [ ] Static analysis and security scan of distributable artifacts.
-- [ ] Host compatibility and long-duration audio tests.
-- [ ] Document installation, removal, rollback, and troubleshooting.
-
-**Exit criteria:** release package with checksums, provenance, and honest compatibility notes.
+- Reimplementing Beatrice inference.
+- Building a replacement voice-conversion VST3.
+- Creating a separate audio streaming worker or second microphone capture path.
