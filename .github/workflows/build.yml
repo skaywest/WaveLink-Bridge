@@ -22,8 +22,15 @@ jobs:
         run: |
           $config = Get-Content src/BeatriceBridge/bridge.example.json -Raw | ConvertFrom-Json
           if ($config.hotkeys.Count -lt 1) { throw "No hotkeys configured" }
-      - name: Publish win-x64
+      - name: Build and publish win-x64
         run: dotnet publish .\src\BeatriceBridge\BeatriceBridge.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+      - name: Verify publish contents
+        shell: pwsh
+        run: |
+          $publish = "src/BeatriceBridge/bin/Release/net8.0-windows/win-x64/publish"
+          if (-not (Test-Path "$publish/BeatriceBridge.exe")) { throw "Missing BeatriceBridge.exe" }
+          if (-not (Test-Path "$publish/bridge.example.json")) { throw "Missing bridge.example.json" }
+          Get-Content "$publish/bridge.example.json" -Raw | ConvertFrom-Json | Out-Null
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
