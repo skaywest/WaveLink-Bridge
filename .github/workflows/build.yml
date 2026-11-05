@@ -49,11 +49,30 @@ jobs:
             '{"hotkeys":{"Ctrl+Alt+F1":{"model":"jvs","speakerIndex":0},"Alt+Ctrl+F1":{"model":"jvs","speakerIndex":1}}}',
             '{"hotkeys":{"F1":{"model":"jvs","speakerIndex":0}}}',
             '{"hotkeys":{"Ctrl+Alt+F1":{"model":"official_1","speakerIndex":4}}}',
+            '{"hotkeys":{"Ctrl+Alt+F1":{"model":"unknown_model","speakerIndex":0}}}',
+            '{"hotkeys":{"Ctrl+Alt+F1":{"model":"jvs","speakerIndex":-1}}}',
             '{"hotkeys":{"Ctrl+Alt+F1":{"toggleBypass":true,"model":"jvs"}}}',
+            '{"hotkeys":{"Ctrl+Alt+F1":{"toggleBypass":true,"speakerIndex":0}}}',
+            '{"hotkeys":{"Ctrl+Alt+F1":{}}}',
             '{"hotkeys":{"Ctrl+Ctrl+Alt+F1":{"model":"jvs","speakerIndex":0}}}',
             '{"hotkeys":{"Ctrl++F1":{"model":"jvs","speakerIndex":0}}}',
+            '{"hotkeys":{"Ctrl+Alt+NUMPAD1":{"model":"jvs","speakerIndex":0}}}',
+            '{"hotkeys":{"F1":{"model":"jvs","speakerIndex":0}}}',
+            '{"hotkeys":{}}',
             '{"hotkeys":{'
           )
+          $manyHotkeys = @{}
+          $validKeys = @("F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12") + @([char[]](65..90) | ForEach-Object { [string]$_ })
+          foreach ($modifier in @("Ctrl","Alt","Shift")) {
+            foreach ($key in $validKeys) {
+              $manyHotkeys["$modifier+$key"] = @{ model = "jvs"; speakerIndex = 0 }
+            }
+          }
+          $tooManyConfig = @{ hotkeys = @{} }
+          foreach ($entry in $manyHotkeys.GetEnumerator() | Select-Object -First 51) {
+            $tooManyConfig.hotkeys[$entry.Key] = $entry.Value
+          }
+          $cases += ($tooManyConfig | ConvertTo-Json -Depth 5 -Compress)
           try {
             foreach ($case in $cases) {
               Set-Content -Path $configPath -Value $case -Encoding utf8
