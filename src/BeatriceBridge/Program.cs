@@ -196,7 +196,7 @@ internal static class Program
     private static (uint Modifiers, uint Key) ParseHotkey(string value)
     {
         uint modifiers = 0, key = 0;
-        foreach (var part in value.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+        foreach (var part in value.Split('+', StringSplitOptions.TrimEntries))
         {
             switch (part.ToLowerInvariant())
             {
