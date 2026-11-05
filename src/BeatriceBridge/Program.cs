@@ -135,10 +135,11 @@ internal static class Program
             } while (ready.SpeakerIndex != voiceIndex && DateTime.UtcNow < applyDeadline);
             if (ready.SpeakerIndex != voiceIndex)
                 throw new TimeoutException("Beatrice audio callback did not accept the requested voice.");
-            // The upstream callback queues native speaker updates to a worker thread.
-            // A short settling interval prevents rapid D6 presses from filling its bounded queue.
+            // The upstream callback updates the reported index before its native worker
+            // finishes applying embeddings. The REST API exposes no completion acknowledgement.
+            // Allow a short settling interval, but report this as a queued request, not a verified switch.
             await Task.Delay(150);
-            Console.WriteLine($"Selected {ready.CurrentModel} voice #{voiceIndex + 1}.");
+            Console.WriteLine($"Voice #{voiceIndex + 1} requested for {ready.CurrentModel}; Beatrice reports the new index.");
         }
         catch (Exception ex) { Console.Error.WriteLine($"Action failed: {ex.Message}"); }
         finally { ApiLock.Release(); }
