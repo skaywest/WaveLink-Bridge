@@ -1,50 +1,51 @@
 # Beatrice Wave Link Bridge
 
-A Windows x64 project to integrate local Beatrice voice conversion with Elgato Wave Link 3 as a VST3 effect, with optional preset control from the FIFINE D6.
+A Windows x64 companion utility for using the **existing official Beatrice 2 VST3** in Elgato Wave Link 3, with optional preset switching from the FIFINE D6.
 
-> **Status: planning and architecture validation.** This repository does not yet contain a working VST3 binary or a verified Beatrice runtime integration.
+> **Status: integration and control-layer development.** The official Beatrice VST3 already exists upstream. This repository is not intended to recreate its voice-conversion engine or replace the official plugin.
 
-## Goals
+## Existing Beatrice plugin
 
-- Run as a VST3 effect that Wave Link 3 can load.
-- Keep real-time audio processing safe: no model loading, disk I/O, blocking IPC, or unbounded work on the audio callback.
-- Run Beatrice inference outside the plugin's real-time audio thread.
-- Provide predictable bypass, latency reporting, silence/startup handling, and recovery if the inference worker stops.
-- Expose stable preset/control actions that can later be mapped to FIFINE D6 buttons.
-- Keep model files and third-party binaries out of source control unless their licenses and provenance are verified.
+- Official source: https://github.com/prj-beatrice/beatrice-vst
+- It is a native C++20 VST3 plugin with its own audio processor, controller, parameters, and UI.
+- Wave Link compatibility must be verified on the target Windows installation; VST3 format support alone is not a compatibility guarantee.
+- The official package/runtime and model files must be obtained from their authorized upstream distribution. This repository will not bundle proprietary inference libraries or model weights.
 
-## Proposed architecture
+## What this repository adds
 
-1. **VST3 host plugin** — Wave Link-facing audio interface, parameters, bypass, and bounded audio queues.
-2. **Local inference worker** — isolated process responsible for Beatrice model/runtime lifecycle and inference.
-3. **Control bridge** — local authenticated IPC for preset selection and status; separate from the audio data path.
-4. **Preset layer** — versioned user presets and stable IDs suitable for D6 mapping.
+1. **Compatibility and installation validation** — confirm the official Beatrice VST3 is discovered and can process audio in Wave Link 3.
+2. **Preset/control bridge** — provide reliable ways to select Beatrice presets without interfering with the audio path.
+3. **FIFINE D6 integration** — map D6 buttons to supported keyboard shortcuts or another verified control mechanism.
+4. **Diagnostics** — show bridge status and report missing plugin/preset/control configuration without touching the audio stream.
 
-The exact audio transport, buffering strategy, and Beatrice API will be selected only after inspecting the target Beatrice implementation and measuring its latency/throughput.
+## Important design boundary
+
+The official Beatrice VST3 performs voice conversion itself. The bridge must not create a second microphone stream, duplicate audio processing, or insert an unnecessary inference worker. Its control path is separate from the VST3 audio path and must never block audio processing.
 
 ## Repository layout
 
-- `docs/ARCHITECTURE.md` — system boundaries and real-time constraints.
-- `docs/ROADMAP.md` — staged implementation and acceptance criteria.
-- `docs/BUILDING.md` — planned Windows build environment and validation.
-- `SECURITY.md` — reporting and supply-chain policy.
-- `src/` — project source (to be added after the API and SDK choices are validated).
-- `tests/` — automated tests (to be added with the first testable components).
+- `docs/ARCHITECTURE.md` — integration boundaries and control design.
+- `docs/ROADMAP.md` — implementation stages and acceptance criteria.
+- `docs/BUILDING.md` — Windows build and validation plan.
+- `docs/UPSTREAM_AUDIT.md` — official plugin, runtime, and license findings.
+- `SECURITY.md` — local-control and supply-chain policy.
+- `src/` and `tests/` — bridge implementation and tests.
 
-## Current non-goals
+## Non-goals
 
-- No redistribution of Beatrice model weights, DLLs, or prebuilt plugins until exact licenses and redistribution terms are checked.
-- No claim that upstream Beatrice VST3 binaries are compatible with Wave Link 3 without host validation.
-- No guarantee of zero latency. Voice conversion necessarily introduces buffering and inference latency; this must be measured.
+- Reimplementing Beatrice voice conversion.
+- Copying or redistributing the official proprietary inference library, binaries, or model weights.
+- Replacing the official Beatrice VST3 with a second VST3 wrapper unless host testing proves that a wrapper is genuinely necessary.
+- Claiming zero latency; the official plugin's latency and CPU use must be measured in the actual Wave Link setup.
 
 ## Development principles
 
-- C++ for the VST3 host-facing component unless validation shows a compelling reason otherwise.
+- Keep the bridge lightweight and separate from the audio callback.
+- Prefer documented plugin controls and supported keyboard shortcuts over reverse-engineered memory/process manipulation.
 - No network dependency at runtime.
-- Fail closed to dry/bypass audio on worker failure.
-- Never block or allocate unbounded memory in the audio processing callback.
+- Validate all local IPC messages and preset identifiers.
 - Keep generated binaries, model weights, caches, and personal audio out of Git.
 
 ## License
 
-No project-wide license has been granted yet. Third-party components retain their own licenses. Do not assume this repository grants rights to redistribute upstream Beatrice code or assets.
+No project-wide license has been granted yet. Third-party components retain their own licenses. This repository does not grant rights to redistribute upstream Beatrice code or assets.
