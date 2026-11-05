@@ -1,46 +1,42 @@
 # Roadmap
 
-## Stage 0 — Existing plugin verification
+## Stage 0 — Identify the correct 112-voice engine
 
-- [x] Identify the official Beatrice 2 VST3 repository.
-- [x] Confirm that upstream contains a native VST3 processor, controller, parameter schema, and editor.
-- [x] Review the bundled inference-library and model licensing notices.
-- [ ] Obtain/install the official Beatrice VST3 package from its authorized source.
-- [ ] Verify discovery, loading, and audio processing in Wave Link 3.
-- [ ] Record plugin version, host behavior, sample rate, channel layout, latency, and CPU use.
+- [x] Identify the Windows app that bundles the 112 voices.
+- [x] Inspect its documented local API and voice-set selection.
+- [x] Confirm voice selection uses speaker_index within the currently loaded set.
+- [ ] Install and test the upstream Beatrice app on the target Windows 11 PC.
+- [ ] Verify model counts: JVS 100, Official 4, Classic Old TTS 8.
 
-**Exit criteria:** the official plugin is confirmed working (or concrete incompatibilities are documented) in the user's Wave Link 3 setup.
+## Stage 1 — Audio routing into Wave Link 3
 
-## Stage 1 — Preset control feasibility
+- [ ] Set Beatrice input to FIFINE K688.
+- [ ] Set Beatrice output to VB-CABLE Input.
+- [ ] Add VB-CABLE Output as a Wave Link 3 input channel.
+- [ ] Confirm the raw mic is not mixed a second time.
+- [ ] Measure latency and check for feedback, crackling, and channel mismatch.
 
-- [ ] Inspect the plugin's existing preset/state behavior and exposed parameters.
-- [ ] Determine whether preset selection can be triggered through supported shortcuts or Wave Link parameter automation.
-- [ ] Verify FIFINE D6 button output capabilities and mapping options.
-- [ ] Choose the least invasive reliable control path.
+## Stage 2 — Control bridge
 
-**Exit criteria:** one physical D6 button can reliably trigger one intended Beatrice action without disrupting audio.
+- [x] Implement a Windows helper for the documented Beatrice local API.
+- [x] Add configurable global hotkeys for voice selection and LIVE/BYPASS.
+- [x] Validate voice indices against /status and serialize model changes.
+- [ ] Build and run the helper on Windows 11.
+- [ ] Confirm FIFINE D6 can emit the configured hotkeys.
+- [ ] Map physical D6 buttons to the selected hotkeys.
 
-## Stage 2 — Build the control bridge
+## Stage 3 — Hardening and packaging
 
-- [ ] Implement a small Windows helper only for functionality not already provided by Beatrice/Wave Link/D6 software.
-- [ ] Add stable preset IDs and validated user configuration.
-- [ ] Add status reporting and useful error messages.
-- [ ] Add safe handling for rapid repeated presses, missing presets, and unavailable plugin/host.
+- [ ] Add automated tests for config validation, hotkey parsing, model switching, and invalid indices.
+- [ ] Add tray/status UI and recovery diagnostics if useful.
+- [ ] Verify clean startup/shutdown and repeated rapid voice changes.
+- [ ] Run a long Wave Link 3 session and measure CPU/latency.
+- [ ] Produce a reproducible Windows x64 package and installation guide.
 
-**Exit criteria:** preset switching is repeatable and does not interfere with the audio signal path.
+## Acceptance criteria
 
-## Stage 3 — Tests and packaging
-
-- [ ] Automated tests for configuration parsing, action mapping, debounce, and error handling.
-- [ ] Verify startup/shutdown and recovery behavior.
-- [ ] Test a long session in Wave Link 3 with repeated preset changes.
-- [ ] Reproducible Windows x64 build and installation instructions.
-- [ ] Dependency/license inventory and security review of distributable artifacts.
-
-**Exit criteria:** a tested companion utility with documented compatibility and rollback instructions.
-
-## Explicitly out of scope unless testing proves it necessary
-
-- Reimplementing Beatrice inference.
-- Building a replacement voice-conversion VST3.
-- Creating a separate audio streaming worker or second microphone capture path.
+- Converted Beatrice output is heard through the intended Wave Link 3 channel without duplicate raw mic.
+- Every built-in voice set can be selected.
+- A D6 button changes to its assigned voice reliably.
+- LIVE/BYPASS toggles without stopping audio.
+- No second inference engine, DLL injection, or undocumented process manipulation is used.
