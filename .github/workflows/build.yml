@@ -24,3 +24,9 @@ jobs:
           if ($config.hotkeys.Count -lt 1) { throw "No hotkeys configured" }
       - name: Publish win-x64
         run: dotnet publish .\src\BeatriceBridge\BeatriceBridge.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: BeatriceBridge-win-x64
+          path: src/BeatriceBridge/bin/Release/net8.0-windows/win-x64/publish/
+          if-no-files-found: error
