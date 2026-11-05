@@ -32,7 +32,7 @@ Requires Windows 10/11 x64 and .NET 8 SDK.
 
     dotnet publish .\src\BeatriceBridge\BeatriceBridge.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
 
-Copy src/BeatriceBridge/bridge.example.json beside the published executable as bridge.json and customize the shortcuts.
+The published package includes bridge.example.json. The helper can start with this example automatically; to customize shortcuts, copy it beside the executable as bridge.json and edit that file. bridge.json takes priority when present.
 
 See docs/BUILDING.md for routing and configuration details, docs/ARCHITECTURE.md for the signal/control paths, and docs/ROADMAP.md for remaining validation.
 
