@@ -22,7 +22,7 @@
 - [x] Add configurable global hotkeys for voice selection and LIVE/BYPASS.
 - [x] Validate voice indices against /status and serialize model changes.
 - [ ] Build and run the helper on Windows 11.
-- [ ] Confirm FIFINE D6 can emit the configured hotkeys.
+- [x] Confirm FIFINE D6 software supports assigning keyboard shortcut combinations (official help center).
 - [ ] Map physical D6 buttons to the selected hotkeys.
 
 ## Stage 3 — Hardening and packaging
