@@ -7,15 +7,17 @@
 - [x] Confirm voice selection uses speaker_index within the currently loaded set.
 - [ ] Install and test the upstream Beatrice app on the target Windows 11 PC.
 - [ ] Verify model counts: JVS 100, Official 4, Classic Old TTS 8.
+- [ ] Confirm the exact name and direction (capture/playback) of Beatrice's virtual audio endpoint.
 
 ## Stage 1 — Integrate Beatrice with the existing Wave Link 3 setup
 
-- [ ] Inspect actual Wave Link 3 virtual input/output endpoints on the target PC.
-- [ ] Determine a supported Beatrice output-to-Wave-Link input handoff without a feedback loop.
-- [ ] Preserve the existing downstream FabFilter/LoudMax processing chain.
-- [ ] Ensure the raw K688 signal is not mixed a second time unintentionally.
+- [ ] Record exact Windows playback/recording endpoint names for Beatrice and Wave Link 3.
+- [ ] Confirm the user's actual chain: FIFINE K688 (XLR) -> MaonoCaster G1 Neo -> Wave Link 3 -> downstream Mixes/effects/output.
+- [ ] Inspect Beatrice's virtual endpoint and determine how it participates in the existing Wave Link routing; do not presume it is a Wave Link endpoint.
+- [ ] Preserve the existing FabFilter/TDR/LoudMax effects in their current Mixes placement and settings.
+- [ ] Ensure the raw mic is not unintentionally doubled and there is no feedback loop.
 - [ ] Verify monitoring, latency, sample rate, channel count, and stability.
-- [ ] Consider VB-CABLE only as a fallback if Wave Link's own endpoints cannot provide the required route.
+- [ ] Do not add VB-CABLE unless a concrete endpoint test proves it necessary.
 
 
 ## Stage 2 — Control bridge
