@@ -15,17 +15,20 @@ It owns microphone capture and conversion. Its local backend listens on 127.0.0.
 
 ## Audio path into Wave Link 3
 
-Initial supported topology to validate on the user's PC:
+The user's existing Wave Link 3 setup is the primary mixer and already hosts the downstream processing chain (including FabFilter and LoudMax). Do not assume a separate VB-CABLE is required.
 
-FIFINE K688 -> Beatrice input -> Beatrice conversion -> VB-CABLE Input -> VB-CABLE Output -> Wave Link input channel -> Wave Link mix/output
+Desired signal order:
 
-- Beatrice output is routed to CABLE Input.
-- Wave Link receives CABLE Output as an input device/channel.
-- Do not capture the physical FIFINE K688 twice in Wave Link unless the user intentionally wants both raw and converted signals.
-- Disable Beatrice Hear Yourself initially; monitor from Wave Link/headphones to avoid duplicate monitoring.
-- This is device routing, not a native Wave Link VST insert. Test latency, sample rate, channels, and feedback.
+FIFINE K688 -> Beatrice input/conversion -> Beatrice output -> a supported Wave Link 3 input route -> existing Wave Link processing chain -> existing MicrophoneFX/output.
+
+The exact Beatrice-to-Wave-Link handoff is still an integration question. Inspect the actual Wave Link 3 device endpoints and supported application/device routing on the target PC before choosing the endpoint. Reuse Wave Link's own virtual devices if they can receive the Beatrice output without a feedback loop. Do not route a Wave Link output back into a channel that is included in that same output mix.
+
+Keep the raw FIFINE K688 out of the final mix unless the user intentionally wants a dry mic alongside the converted voice. Keep Beatrice monitoring off initially and monitor from the existing Wave Link path to avoid doubled monitoring.
+
+VB-CABLE is an optional fallback only if Wave Link's own endpoints cannot provide a stable return path. Do not make it a prerequisite or install it pre-emptively. This is audio-device routing, not a native Wave Link VST insert.
 
 Do not load a second Beatrice inference engine in Wave Link while the standalone app is already converting the microphone.
+
 
 ## Control bridge
 
