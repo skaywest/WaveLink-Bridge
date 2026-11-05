@@ -31,7 +31,7 @@ Do not load a second Beatrice inference engine in Wave Link while the standalone
 
 src/BeatriceBridge is a Windows helper outside the audio path. It registers configurable global keyboard shortcuts, talks only to http://127.0.0.1:5005, reads /status before changing a voice, waits for asynchronous model loading, validates voice indices against the active model, toggles LIVE/BYPASS, and serializes requests.
 
-FIFINE D6 can be mapped to the configured key combinations only if its installed software supports sending those combinations. Confirm this on the user's D6 setup; do not assume a direct device SDK.
+FIFINE's official help article documents a Shortcut Keys action that records a keyboard combination and assigns it to a D6 button. Therefore the intended mapping path is supported by the vendor; confirm the user's installed software exposes the same option. No direct device SDK is needed.
 
 ## Security
 
