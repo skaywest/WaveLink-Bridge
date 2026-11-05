@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Channels;
 
 namespace BeatriceBridge;
 
@@ -73,8 +74,21 @@ internal static class Program
         }
 
         Console.WriteLine("Bridge active. Ctrl+C to exit.");
+        var actionQueue = Channel.CreateBounded<HotkeyAction>(new BoundedChannelOptions(16)
+        {
+            FullMode = BoundedChannelFullMode.Wait,
+            SingleReader = true,
+            SingleWriter = true
+        });
+        using var shutdown = new CancellationTokenSource();
+        var actionWorker = ProcessActionQueueAsync(actionQueue.Reader, shutdown.Token);
         uint mainThreadId = GetCurrentThreadId();
-        Console.CancelKeyPress += (_, e) => { e.Cancel = true; PostThreadMessage(mainThreadId, WmQuit, IntPtr.Zero, IntPtr.Zero); };
+        Console.CancelKeyPress += (_, e) =>
+        {
+            e.Cancel = true;
+            if (!PostThreadMessage(mainThreadId, WmQuit, IntPtr.Zero, IntPtr.Zero))
+                Console.Error.WriteLine($"Could not post shutdown message: {new Win32Exception(Marshal.GetLastWin32Error()).Message}");
+        };
         try
         {
             int messageResult;
@@ -82,8 +96,8 @@ internal static class Program
             {
                 if (message.message != WmHotkey) continue;
                 int index = checked((int)message.wParam.ToInt64() - 1);
-                if (index >= 0 && index < RegisteredActions.Count)
-                    _ = ExecuteActionAsync(RegisteredActions[index]);
+                if (index >= 0 && index < RegisteredActions.Count && !actionQueue.Writer.TryWrite(RegisteredActions[index]))
+                    Console.Error.WriteLine("Action queue is full; hotkey action was ignored.");
             }
             if (messageResult == -1)
             {
@@ -92,19 +106,32 @@ internal static class Program
                 return 5;
             }
         }
-        finally { UnregisterAll(); }
+        finally
+        {
+            UnregisterAll();
+            actionQueue.Writer.TryComplete();
+            shutdown.Cancel();
+            try { await actionWorker; }
+            catch (OperationCanceledException) { }
+        }
         return 0;
     }
 
-    private static async Task ExecuteActionAsync(HotkeyAction action)
+    private static async Task ProcessActionQueueAsync(ChannelReader<HotkeyAction> reader, CancellationToken cancellationToken)
     {
-        await ApiLock.WaitAsync();
+        await foreach (var action in reader.ReadAllAsync(cancellationToken))
+            await ExecuteActionAsync(action, cancellationToken);
+    }
+
+    private static async Task ExecuteActionAsync(HotkeyAction action, CancellationToken cancellationToken)
+    {
+        await ApiLock.WaitAsync(cancellationToken);
         try
         {
             if (action.ToggleBypass)
             {
-                var s = await GetStatusAsync();
-                await GetJsonAsync($"set_config?bypass={(s.Bypass ? "false" : "true")}");
+                var s = await GetStatusAsync(cancellationToken);
+                await GetJsonAsync($"set_config?bypass={(s.Bypass ? "false" : "true")}", cancellationToken);
                 Console.WriteLine(s.Bypass ? "LIVE enabled." : "BYPASS enabled.");
                 return;
             }
@@ -112,15 +139,15 @@ internal static class Program
             if (action.SpeakerIndex is null) return;
             if (action.Model is not null)
             {
-                var s = await GetStatusAsync();
+                var s = await GetStatusAsync(cancellationToken);
                 if (!string.Equals(s.CurrentModel, action.Model, StringComparison.OrdinalIgnoreCase))
                 {
-                    await GetJsonAsync($"set_model?model={Uri.EscapeDataString(action.Model)}");
+                    await GetJsonAsync($"set_model?model={Uri.EscapeDataString(action.Model)}", cancellationToken);
                     var deadline = DateTime.UtcNow.AddSeconds(25);
                     do
                     {
-                        await Task.Delay(250);
-                        s = await GetStatusAsync();
+                        await Task.Delay(250, cancellationToken);
+                        s = await GetStatusAsync(cancellationToken);
                     } while ((!string.Equals(s.CurrentModel, action.Model, StringComparison.OrdinalIgnoreCase)
                               || (ExpectedSpeakerCounts.TryGetValue(action.Model, out var expected) && s.SpeakerCount != expected))
                              && DateTime.UtcNow < deadline);
@@ -131,41 +158,42 @@ internal static class Program
                 }
             }
 
-            var ready = await GetStatusAsync();
+            var ready = await GetStatusAsync(cancellationToken);
             if (action.SpeakerIndex is not int voiceIndex || voiceIndex < 0 || voiceIndex >= ready.SpeakerCount)
                 throw new ArgumentOutOfRangeException(nameof(action.SpeakerIndex), $"Index {action.SpeakerIndex} is invalid for {ready.CurrentModel} ({ready.SpeakerCount} voices).");
-            await GetJsonAsync($"set_config?speaker_index={voiceIndex}");
+            await GetJsonAsync($"set_config?speaker_index={voiceIndex}", cancellationToken);
             var applyDeadline = DateTime.UtcNow.AddSeconds(3);
             do
             {
-                await Task.Delay(25);
-                ready = await GetStatusAsync();
+                await Task.Delay(25, cancellationToken);
+                ready = await GetStatusAsync(cancellationToken);
             } while (ready.SpeakerIndex != voiceIndex && DateTime.UtcNow < applyDeadline);
             if (ready.SpeakerIndex != voiceIndex)
                 throw new TimeoutException("Beatrice audio callback did not accept the requested voice.");
             // The upstream callback updates the reported index before its native worker
             // finishes applying embeddings. The REST API exposes no completion acknowledgement.
             // Allow a short settling interval, but report this as a queued request, not a verified switch.
-            await Task.Delay(150);
+            await Task.Delay(150, cancellationToken);
             Console.WriteLine($"Voice #{voiceIndex + 1} requested for {ready.CurrentModel}; Beatrice reports the new index.");
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception ex) { Console.Error.WriteLine($"Action failed: {ex.Message}"); }
         finally { ApiLock.Release(); }
     }
 
-    private static async Task<BackendStatus> GetStatusAsync()
+    private static async Task<BackendStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
-        using var response = await Http.GetAsync("status");
+        using var response = await Http.GetAsync("status", cancellationToken);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<BackendStatus>(JsonOptions)
+        return await response.Content.ReadFromJsonAsync<BackendStatus>(JsonOptions, cancellationToken)
                ?? throw new InvalidDataException("Empty Beatrice status response.");
     }
 
-    private static async Task GetJsonAsync(string path)
+    private static async Task GetJsonAsync(string path, CancellationToken cancellationToken = default)
     {
-        using var response = await Http.GetAsync(path);
+        using var response = await Http.GetAsync(path, cancellationToken);
         response.EnsureSuccessStatusCode();
-        var body = await response.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>(JsonOptions);
+        var body = await response.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>(JsonOptions, cancellationToken);
         if (body is not null && body.TryGetValue("error", out var error)) throw new InvalidOperationException(error.ToString());
     }
 
