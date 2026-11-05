@@ -13,21 +13,16 @@ The separate native VST3 source at https://github.com/prj-beatrice/beatrice-vst 
 
 ## Integration design
 
-Initial route to validate:
+No third-party VB-CABLE dependency is assumed. The user's existing Wave Link 3 virtual audio devices and routing should be used wherever they can carry the Beatrice signal.
 
-FIFINE K688 -> Beatrice standalone app -> VB-CABLE -> Wave Link 3 input channel
+Target signal order:
 
-Beatrice performs conversion. Wave Link receives the converted virtual-cable output as an input. This is audio-device routing, not a native Wave Link VST insert.
+FIFINE K688 -> Beatrice AI conversion -> Wave Link 3 input/routing -> existing Wave Link plugin chain (FabFilter, LoudMax, etc.) -> existing Wave Link MicrophoneFX/output
 
-The companion helper in src/BeatriceBridge:
-- registers configurable Windows global hotkeys;
-- selects a voice from JVS, Official Model, or Classic Old TTS;
-- waits for asynchronous model-set changes;
-- validates speaker indices using Beatrice /status;
-- toggles Beatrice LIVE/BYPASS;
-- communicates only with the loopback API at 127.0.0.1:5005.
+The exact handoff from Beatrice back into Wave Link must be verified against the devices exposed by the installed Wave Link 3 version. Do not create a loop by feeding a Wave Link output back into an input that is mixed into the same output. Do not install VB-CABLE unless testing proves Wave Link cannot accept Beatrice's output through its existing devices.
 
-FIFINE's official Help Center documents assigning keyboard shortcut combinations to D6 buttons. Map each physical key to a combination from bridge.json in the D6 Toolbox → Shortcut Keys action.
+Beatrice performs conversion; Wave Link remains the user's main mixer and plugin host. This is audio-device/application routing, not a claim that the standalone app is a native Wave Link VST insert.
+
 
 ## Build
 
