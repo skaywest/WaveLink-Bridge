@@ -8,13 +8,15 @@
 - [ ] Install and test the upstream Beatrice app on the target Windows 11 PC.
 - [ ] Verify model counts: JVS 100, Official 4, Classic Old TTS 8.
 
-## Stage 1 — Audio routing into Wave Link 3
+## Stage 1 — Integrate Beatrice with the existing Wave Link 3 setup
 
-- [ ] Set Beatrice input to FIFINE K688.
-- [ ] Set Beatrice output to VB-CABLE Input.
-- [ ] Add VB-CABLE Output as a Wave Link 3 input channel.
-- [ ] Confirm the raw mic is not mixed a second time.
-- [ ] Measure latency and check for feedback, crackling, and channel mismatch.
+- [ ] Inspect actual Wave Link 3 virtual input/output endpoints on the target PC.
+- [ ] Determine a supported Beatrice output-to-Wave-Link input handoff without a feedback loop.
+- [ ] Preserve the existing downstream FabFilter/LoudMax processing chain.
+- [ ] Ensure the raw K688 signal is not mixed a second time unintentionally.
+- [ ] Verify monitoring, latency, sample rate, channel count, and stability.
+- [ ] Consider VB-CABLE only as a fallback if Wave Link's own endpoints cannot provide the required route.
+
 
 ## Stage 2 — Control bridge
 
