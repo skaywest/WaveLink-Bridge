@@ -80,3 +80,29 @@ Official documentation reviewed:
 - https://github.com/prj-beatrice/beatrice-vst/blob/main/LICENSES_BUNDLED.txt
 
 This remains a source/build-recipe inspection only. No upstream binary, downloaded library, model, or installer was executed or malware-scanned.
+
+
+## Revised project decision — 2026-11-05
+
+A direct inspection of the official repository confirms that **a complete Beatrice 2 VST3 plugin already exists upstream**. The project must not spend time recreating its VST3 processor or implementing a second inference pipeline.
+
+Inspected files:
+- `src/vst/processor.h` and `src/vst/processor.cc`: native VST3 audio processor, mono/stereo bus handling, float32 processing, state persistence, and latency reporting.
+- `src/vst/controller.cc`: VST3 parameter registration and host state synchronization.
+- `src/common/parameter_schema.h`: parameter IDs include model, voice, pitch/formant, gain, intonation, voice-morph controls, and latency reporting.
+- `src/vst/editor.cc`: the model is selected through a file selector in the plugin UI.
+- `CMakeLists.txt` and `Makefile`: official build recipe and dependency download behavior.
+
+The visible source contains automatable numeric/list parameters and host state persistence. The model file path is a string parameter handled by the plugin editor/state code, not exposed as a normal automatable VST parameter in the controller registration. No explicit global hotkey or standalone preset-switching API was found in the inspected source. Therefore D6 control feasibility still needs a targeted check; it must not be assumed that the model selector can be changed directly by host automation.
+
+**Superseding decision:** use the official Beatrice VST3 as the audio effect and build only a small companion/control bridge if Wave Link 3 and FIFINE D6 do not already provide the required control path. Do not create a separate inference worker, second microphone stream, or replacement VST3 unless direct compatibility testing demonstrates a real need.
+
+The proprietary inference-library restriction remains relevant to redistribution. The safest initial approach is for the user to obtain/install the official plugin through its authorized upstream distribution; this repository should not bundle the upstream plugin, proprietary library, or model assets.
+
+The revised first milestone is:
+1. verify the official Beatrice VST3 loads and processes audio in Wave Link 3;
+2. identify the exact Beatrice settings that need switching (model, voice, or parameter state);
+3. verify D6 hotkey output and determine the least invasive supported trigger mechanism;
+4. implement only the missing control glue.
+
+This revised scope replaces the earlier proposal to build a new VST3 host plugin plus isolated Beatrice inference worker.
