@@ -33,6 +33,12 @@ jobs:
           Get-Content "$publish/bridge.example.json" -Raw | ConvertFrom-Json | Out-Null
           $program = Get-Content "src/BeatriceBridge/Program.cs" -Raw
           if ($program -notmatch 'bridge\.example\.json') { throw "Program does not contain the example-config fallback" }
+      - name: Smoke test published executable
+        shell: pwsh
+        run: |
+          $publish = "src/BeatriceBridge/bin/Release/net8.0-windows/win-x64/publish"
+          & "$publish/BeatriceBridge.exe"
+          if ($LASTEXITCODE -ne 3) { throw "Expected exit code 3 when Beatrice API is unavailable; got $LASTEXITCODE" }
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
