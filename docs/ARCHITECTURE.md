@@ -17,11 +17,13 @@ It owns microphone capture and conversion. Its local backend listens on 127.0.0.
 
 The user's existing Wave Link 3 setup is the primary mixer and already hosts the downstream processing chain (including FabFilter and LoudMax). Do not assume a separate VB-CABLE is required.
 
-Desired signal order:
+Confirmed user signal order:
 
-FIFINE K688 -> Beatrice input/conversion -> Beatrice output -> a supported Wave Link 3 input route -> existing Wave Link processing chain -> existing MicrophoneFX/output.
+FIFINE K688 (XLR) -> MaonoCaster G1 Neo -> Wave Link 3 microphone input/channel -> the user's existing downstream Mixes/output processing and routing.
 
-The exact Beatrice-to-Wave-Link handoff is still an integration question. Inspect the actual Wave Link 3 device endpoints and supported application/device routing on the target PC before choosing the endpoint. Reuse Wave Link's own virtual devices if they can receive the Beatrice output without a feedback loop. Do not route a Wave Link output back into a channel that is included in that same output mix.
+The user's screenshot confirms the effects (FabFilter/TDR/LoudMax chain) are attached in the Wave Link 3 Mixes area over the added microphone source. Preserve their current placement and settings. The user identifies the virtual audio device as Beatrice's, not Wave Link's. Treat Beatrice as a distinct virtual endpoint. Its exact routing/insertion point relative to Wave Link is not yet verified; do not assume Beatrice must be placed before the MaonoCaster or before Wave Link, and do not invent an audio path.
+
+The exact Beatrice endpoint and handoff remain an integration question. Inspect Windows playback/recording endpoints and Beatrice's Audio Routing page, then inspect Wave Link 3's channel/mix assignments before choosing the route. Do not relabel Beatrice's virtual endpoint as a Wave Link device. Do not route a Wave Link output back into a channel included in that same output mix.
 
 Keep the raw FIFINE K688 out of the final mix unless the user intentionally wants a dry mic alongside the converted voice. Keep Beatrice monitoring off initially and monitor from the existing Wave Link path to avoid doubled monitoring.
 
