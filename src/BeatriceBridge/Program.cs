@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -76,12 +77,19 @@ internal static class Program
         Console.CancelKeyPress += (_, e) => { e.Cancel = true; PostThreadMessage(mainThreadId, WmQuit, IntPtr.Zero, IntPtr.Zero); };
         try
         {
-            while (GetMessage(out var message, IntPtr.Zero, 0, 0) > 0)
+            int messageResult;
+            while ((messageResult = GetMessage(out var message, IntPtr.Zero, 0, 0)) > 0)
             {
                 if (message.message != WmHotkey) continue;
                 int index = checked((int)message.wParam.ToInt64() - 1);
                 if (index >= 0 && index < RegisteredActions.Count)
                     _ = ExecuteActionAsync(RegisteredActions[index]);
+            }
+            if (messageResult == -1)
+            {
+                int error = Marshal.GetLastWin32Error();
+                Console.Error.WriteLine($"Windows message loop failed: {new Win32Exception(error).Message} (error {error}).");
+                return 5;
             }
         }
         finally { UnregisterAll(); }
@@ -172,6 +180,10 @@ internal static class Program
             if (action.SpeakerIndex is < 0) throw new InvalidDataException($"'{key}' has a negative speakerIndex.");
             if (action.Model is not null && action.Model is not ("jvs" or "official_1" or "old_tts"))
                 throw new InvalidDataException($"'{key}' has unsupported model '{action.Model}'.");
+            if (action.Model is not null && action.SpeakerIndex is int configuredIndex
+                && ExpectedSpeakerCounts.TryGetValue(action.Model, out var modelSpeakerCount)
+                && configuredIndex >= modelSpeakerCount)
+                throw new InvalidDataException($"'{key}' selects speakerIndex {configuredIndex}, but model '{action.Model}' has only {modelSpeakerCount} voices.");
         }
     }
 
