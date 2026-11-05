@@ -104,8 +104,19 @@ internal static class Program
             var ready = await GetStatusAsync();
             if (action.SpeakerIndex is not int voiceIndex || voiceIndex < 0 || voiceIndex >= ready.SpeakerCount)
                 throw new ArgumentOutOfRangeException(nameof(action.SpeakerIndex), $"Index {action.SpeakerIndex} is invalid for {ready.CurrentModel} ({ready.SpeakerCount} voices).");
-            await GetJsonAsync($"set_config?speaker_index={action.SpeakerIndex.Value}");
-            Console.WriteLine($"Selected {ready.CurrentModel} voice #{action.SpeakerIndex.Value + 1}.");
+            await GetJsonAsync($"set_config?speaker_index={voiceIndex}");
+            var applyDeadline = DateTime.UtcNow.AddSeconds(3);
+            do
+            {
+                await Task.Delay(25);
+                ready = await GetStatusAsync();
+            } while (ready.SpeakerIndex != voiceIndex && DateTime.UtcNow < applyDeadline);
+            if (ready.SpeakerIndex != voiceIndex)
+                throw new TimeoutException("Beatrice audio callback did not accept the requested voice.");
+            // The upstream callback queues native speaker updates to a worker thread.
+            // A short settling interval prevents rapid D6 presses from filling its bounded queue.
+            await Task.Delay(150);
+            Console.WriteLine($"Selected {ready.CurrentModel} voice #{voiceIndex + 1}.");
         }
         catch (Exception ex) { Console.Error.WriteLine($"Action failed: {ex.Message}"); }
         finally { ApiLock.Release(); }
@@ -206,4 +217,5 @@ internal sealed class BackendStatus
     [JsonPropertyName("bypass")] public bool Bypass { get; set; }
     [JsonPropertyName("current_model")] public string CurrentModel { get; set; } = "";
     [JsonPropertyName("n_speakers")] public int SpeakerCount { get; set; }
+    [JsonPropertyName("speaker_index")] public int SpeakerIndex { get; set; }
 }
