@@ -36,7 +36,7 @@ speakerIndex is zero-based and must be less than the active model's n_speakers. 
 
 ## FIFINE D6
 
-In the D6 software, assign each physical button a keyboard shortcut matching bridge.json. Exact steps depend on the installed D6 software version and must be confirmed on the user's PC. If the D6 software cannot emit arbitrary shortcuts, revise the mapping only after verifying its actual capabilities.
+In the D6 software, assign each physical button a keyboard shortcut matching bridge.json. FIFINE's official Help Center documents the Shortcut Keys tool: drag it to a blank D6 key, click the shortcut field, and press the desired key combination. In the installed D6 app, assign combinations matching bridge.json. UI labels may vary by software version.
 
 ## Audio routing checklist
 
