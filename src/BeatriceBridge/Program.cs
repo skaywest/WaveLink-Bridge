@@ -102,7 +102,7 @@ internal static class Program
             }
 
             var ready = await GetStatusAsync();
-            if (action.SpeakerIndex < 0 || action.SpeakerIndex >= ready.SpeakerCount)
+            if (action.SpeakerIndex is not int voiceIndex || voiceIndex < 0 || voiceIndex >= ready.SpeakerCount)
                 throw new ArgumentOutOfRangeException(nameof(action.SpeakerIndex), $"Index {action.SpeakerIndex} is invalid for {ready.CurrentModel} ({ready.SpeakerCount} voices).");
             await GetJsonAsync($"set_config?speaker_index={action.SpeakerIndex.Value}");
             Console.WriteLine($"Selected {ready.CurrentModel} voice #{action.SpeakerIndex.Value + 1}.");
@@ -135,7 +135,7 @@ internal static class Program
             _ = ParseHotkey(key);
             if (action.ToggleBypass == (action.SpeakerIndex is not null))
                 throw new InvalidDataException($"'{key}' must define either toggleBypass or speakerIndex.");
-            if (action.SpeakerIndex < 0) throw new InvalidDataException($"'{key}' has a negative speakerIndex.");
+            if (action.SpeakerIndex is < 0) throw new InvalidDataException($"'{key}' has a negative speakerIndex.");
             if (action.Model is not null && action.Model is not ("jvs" or "official_1" or "old_tts"))
                 throw new InvalidDataException($"'{key}' has unsupported model '{action.Model}'.");
         }
