@@ -31,6 +31,8 @@ jobs:
           if (-not (Test-Path "$publish/BeatriceBridge.exe")) { throw "Missing BeatriceBridge.exe" }
           if (-not (Test-Path "$publish/bridge.example.json")) { throw "Missing bridge.example.json" }
           Get-Content "$publish/bridge.example.json" -Raw | ConvertFrom-Json | Out-Null
+          $program = Get-Content "src/BeatriceBridge/Program.cs" -Raw
+          if ($program -notmatch 'bridge\.example\.json') { throw "Program does not contain the example-config fallback" }
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
