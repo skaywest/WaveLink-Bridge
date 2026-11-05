@@ -39,6 +39,30 @@ jobs:
           $publish = "src/BeatriceBridge/bin/Release/net8.0-windows/win-x64/publish"
           $process = Start-Process -FilePath "$publish/BeatriceBridge.exe" -Wait -PassThru -NoNewWindow
           if ($process.ExitCode -ne 3) { throw "Expected exit code 3 when Beatrice API is unavailable; got $($process.ExitCode)" }
+      - name: Test invalid configuration rejection
+        shell: pwsh
+        run: |
+          $publish = "src/BeatriceBridge/bin/Release/net8.0-windows/win-x64/publish"
+          $exe = "$publish/BeatriceBridge.exe"
+          $configPath = "$publish/bridge.json"
+          $cases = @(
+            '{"hotkeys":{"Ctrl+Alt+F1":{"model":"jvs","speakerIndex":0},"Alt+Ctrl+F1":{"model":"jvs","speakerIndex":1}}}',
+            '{"hotkeys":{"F1":{"model":"jvs","speakerIndex":0}}}',
+            '{"hotkeys":{"Ctrl+Alt+F1":{"model":"official_1","speakerIndex":4}}}',
+            '{"hotkeys":{"Ctrl+Alt+F1":{"toggleBypass":true,"model":"jvs"}}}'
+          )
+          try {
+            foreach ($case in $cases) {
+              Set-Content -Path $configPath -Value $case -Encoding utf8
+              $process = Start-Process -FilePath $exe -Wait -PassThru -NoNewWindow
+              if ($process.ExitCode -ne 2) {
+                throw "Invalid configuration was not rejected with exit code 2; got $($process.ExitCode). Case: $case"
+              }
+            }
+          }
+          finally {
+            Remove-Item $configPath -Force -ErrorAction SilentlyContinue
+          }
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
