@@ -1,27 +1,29 @@
 # Building
 
-## Initial status
+## Current strategy
 
-There is no buildable plugin target in the repository yet. The build system will be added after the VST3 SDK and Beatrice backend have been selected and audited. This avoids committing a misleading placeholder that appears to build but cannot produce a functioning effect.
+Do not build a replacement Beatrice VST3. The official plugin is maintained upstream:
+
+https://github.com/prj-beatrice/beatrice-vst
+
+This repository will contain only the companion/control bridge, unless tests establish that a replacement audio plugin is unavoidable.
 
 ## Intended environment
 
 - Windows 11 x64
-- Visual Studio 2022 with the Desktop development with C++ workload
-- A supported CMake version
-- A pinned Steinberg VST3 SDK version (to be selected)
-- Beatrice runtime and model assets obtained from their verified upstream sources
-
-Exact minimum versions will be recorded after a clean build is reproduced.
+- Visual Studio 2022 with the Desktop development with C++ workload (if native helper code is needed)
+- CMake (only if the selected helper implementation uses it)
+- Wave Link 3 and an authorized installation of the official Beatrice VST3 for integration testing
 
 ## Validation plan
 
-Every implementation stage should record:
-- compiler and SDK versions;
-- exact configure/build commands;
-- build output and warnings;
+Record:
+- exact official Beatrice plugin version and provenance;
+- Wave Link 3 version and plugin discovery/load result;
+- compiler and build-tool versions for the bridge;
+- exact configure/build commands and warnings;
 - automated test results;
-- Wave Link 3 load and audio-path test results;
-- measured latency and CPU/memory use.
+- D6 button-to-action mapping;
+- preset switching reliability and long-session results.
 
-Do not install unsigned or unverified binaries as part of troubleshooting. Build from reviewed source wherever practical.
+Do not download or redistribute the proprietary Beatrice inference library or model packages from this repository. Obtain the official plugin and its dependencies from authorized upstream distribution channels.
