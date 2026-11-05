@@ -1,0 +1,36 @@
+# Build outputs
+/build/
+/out/
+/cmake-build-*/
+/.vs/
+/.vscode/
+/.idea/
+*.user
+*.suo
+*.VC.db
+*.pdb
+*.ilk
+*.obj
+*.o
+*.dll
+*.exe
+*.vst3
+*.lib
+*.a
+*.so
+
+# Generated and local data
+/cache/
+/logs/
+/models/
+/weights/
+/runtime/
+/third_party/_build/
+/presets/local/
+*.wav
+*.flac
+*.mp3
+
+# OS
+.DS_Store
+Thumbs.db
