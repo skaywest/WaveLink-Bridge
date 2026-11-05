@@ -56,3 +56,8 @@ Do not install VB-CABLE unless the native Wave Link endpoints cannot receive Bea
 - The helper does not embed or redistribute Beatrice, its engine, voice models, or VB-CABLE.
 - The helper controls the standalone app; it does not turn it into a native Wave Link VST3 insert.
 - Build and runtime validation require Windows; source code alone cannot prove the user's Wave Link routing or D6 key output.
+
+
+## CI smoke test
+
+The Windows workflow publishes the self-contained x64 executable, verifies the example configuration, and starts the published executable once without Beatrice running. Exit code 3 is expected in that isolated CI test because the local Beatrice API is intentionally unavailable; this confirms the app parsed its configuration and reached the API connection check. It does not replace an audio or live voice-switching test.
