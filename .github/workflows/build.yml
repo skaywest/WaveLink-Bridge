@@ -62,7 +62,6 @@ jobs:
                 throw "Invalid configuration was not rejected with exit code 2; got $($process.ExitCode). Case: $case"
               }
             }
-          }
             Set-Content -Path $configPath -Value '{"hotkeys":{"Ctrl+Alt+F1":{"model":"jvs","speakerIndex":0}}}' -Encoding utf8
             $validProcess = Start-Process -FilePath $exe -Wait -PassThru -NoNewWindow
             if ($validProcess.ExitCode -ne 3) {
