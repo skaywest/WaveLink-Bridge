@@ -49,7 +49,10 @@ jobs:
             '{"hotkeys":{"Ctrl+Alt+F1":{"model":"jvs","speakerIndex":0},"Alt+Ctrl+F1":{"model":"jvs","speakerIndex":1}}}',
             '{"hotkeys":{"F1":{"model":"jvs","speakerIndex":0}}}',
             '{"hotkeys":{"Ctrl+Alt+F1":{"model":"official_1","speakerIndex":4}}}',
-            '{"hotkeys":{"Ctrl+Alt+F1":{"toggleBypass":true,"model":"jvs"}}}'
+            '{"hotkeys":{"Ctrl+Alt+F1":{"toggleBypass":true,"model":"jvs"}}}',
+            '{"hotkeys":{"Ctrl+Ctrl+Alt+F1":{"model":"jvs","speakerIndex":0}}}',
+            '{"hotkeys":{"Ctrl++F1":{"model":"jvs","speakerIndex":0}}}',
+            '{"hotkeys":{'
           )
           try {
             foreach ($case in $cases) {
@@ -60,6 +63,11 @@ jobs:
               }
             }
           }
+            Set-Content -Path $configPath -Value '{"hotkeys":{"Ctrl+Alt+F1":{"model":"jvs","speakerIndex":0}}}' -Encoding utf8
+            $validProcess = Start-Process -FilePath $exe -Wait -PassThru -NoNewWindow
+            if ($validProcess.ExitCode -ne 3) {
+              throw "Valid configuration was not accepted; expected exit code 3 (API unavailable), got $($validProcess.ExitCode)"
+            }
           finally {
             Remove-Item $configPath -Force -ErrorAction SilentlyContinue
           }
