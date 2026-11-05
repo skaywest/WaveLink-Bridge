@@ -27,7 +27,7 @@ The companion helper in src/BeatriceBridge:
 - toggles Beatrice LIVE/BYPASS;
 - communicates only with the loopback API at 127.0.0.1:5005.
 
-FIFINE D6 buttons can trigger these actions if the installed D6 software supports assigning keyboard shortcuts. That capability still needs confirmation on the user's PC.
+FIFINE's official Help Center documents assigning keyboard shortcut combinations to D6 buttons. Map each physical key to a combination from bridge.json in the D6 Toolbox → Shortcut Keys action.
 
 ## Build
 
