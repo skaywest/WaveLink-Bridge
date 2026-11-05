@@ -12,6 +12,8 @@
     "Ctrl+Alt+F10": { "model": "jvs", "speakerIndex": 9 },
     "Ctrl+Alt+F11": { "model": "jvs", "speakerIndex": 10 },
     "Ctrl+Alt+F12": { "model": "jvs", "speakerIndex": 11 },
+    "Ctrl+Alt+O": { "model": "official_1", "speakerIndex": 0 },
+    "Ctrl+Alt+T": { "model": "old_tts", "speakerIndex": 0 },
     "Ctrl+Alt+V": { "toggleBypass": true }
   }
 }
