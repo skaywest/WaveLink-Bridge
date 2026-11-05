@@ -1,0 +1,17 @@
+{
+  "hotkeys": {
+    "Ctrl+Alt+F1": { "model": "jvs", "speakerIndex": 0 },
+    "Ctrl+Alt+F2": { "model": "jvs", "speakerIndex": 1 },
+    "Ctrl+Alt+F3": { "model": "jvs", "speakerIndex": 2 },
+    "Ctrl+Alt+F4": { "model": "jvs", "speakerIndex": 3 },
+    "Ctrl+Alt+F5": { "model": "jvs", "speakerIndex": 4 },
+    "Ctrl+Alt+F6": { "model": "jvs", "speakerIndex": 5 },
+    "Ctrl+Alt+F7": { "model": "jvs", "speakerIndex": 6 },
+    "Ctrl+Alt+F8": { "model": "jvs", "speakerIndex": 7 },
+    "Ctrl+Alt+F9": { "model": "jvs", "speakerIndex": 8 },
+    "Ctrl+Alt+F10": { "model": "jvs", "speakerIndex": 9 },
+    "Ctrl+Alt+F11": { "model": "jvs", "speakerIndex": 10 },
+    "Ctrl+Alt+F12": { "model": "jvs", "speakerIndex": 11 },
+    "Ctrl+Alt+V": { "toggleBypass": true }
+  }
+}
